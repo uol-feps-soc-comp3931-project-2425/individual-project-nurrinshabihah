@@ -2,7 +2,8 @@
 Author: Nurrin Shabihah
 -/
 import Mathlib.InformationTheory.Hamming
-import Mathlib.Data.Fin.Basic
+import Mathlib.Data.Fintype.Basic
+
 
 /-
 # Hamming bound
@@ -27,7 +28,6 @@ parameters.
 /-- alphabet of size `q`-/
 def alphabet (q : ℕ) := Fin q
 
-
 -- ensure alphabet is finite
 instance (q : ℕ) : Fintype (alphabet q) := Fin.fintype q
 
@@ -39,10 +39,12 @@ instance (q : ℕ) : DecidableEq (alphabet q) := by
 def codeword (q n : ℕ) := Fin n → alphabet q
 
 -- ensure codewords are finite
-instance (q n : ℕ) : Fintype (codeword q n) := Pi.fintype
+instance (q n : ℕ) : Fintype (codeword q n) := Pi.instFintype
+#check Pi.instFintype
+instance (q : ℕ) : DecidableEq (codeword q n) := by
+  unfold codeword
+  infer_instance
 
-/-- length of a codeword-/
-def length (n : ℕ) := n
 
 /--
 Defines a Hamming ball of radius `r` centered at a codeword `x`.
@@ -57,19 +59,28 @@ Calculates the volume of a Hamming ball of radius `r` in a space of codewords of
 alphabet of size `q`.
 The volume is the number of codewords within the Hamming ball.
 -/
-def volumeHamming (q n r : ℕ) : ℕ :=
+def volumeHamming (q n r : ℕ) : ℚ :=
   ∑ i in Finset.range (r + 1), Nat.choose n i * (q - 1) ^ i
 
-/--a code `C` is a subset of all possible codewords of length `n` over an alphabet of size `q`-/
-def code {q n : ℕ} := Finset (codeword q n)
+def minDistance {q n : ℕ} (C : Finset (codeword q n)) : Option ℕ :=
+  if h : Finset.Nonempty (Finset.offDiag C) then
+    some (Finset.inf' (Finset.offDiag C) h (fun ⟨x, y⟩ => hammingDist x y))
+  else
+    none
+
+ 
+
 
 /--
 The Hamming bound theorem states that for a code `C` of length `n`, size `q`, and minimum distance
 `d`, the size of `C` is bounded by the volume of the space divided by the volume of a Hamming ball
 of radius `t`, where `t` is the maximum number of errors that can be corrected.
 -/
-theorem hammingBound {q n d : ℕ} (C : Finset (codeword q n)) :
-  C.card ≤ (q^n) / (∑ i in Finset.range ((d - 1) / 2 + 1), Nat.choose n i * (q - 1) ^ i) :=
+theorem hammingBound {q n d : ℕ} (C : Finset (codeword q n)) (hC : ∀ x ∈ C, ∀ y ∈ C,
+x ≠ y → hammingDist x y ≥ d) (hd : d ≥ 1  ):
+  C.card ≤ (q^n) / (volumeHamming q n ((d - 1) / 2)) :=
+by
+    sorry
 -- 1. each codeword in C can be the center of a Hamming ball of radius r
 -- 2. the Hamming balls are disjoint because the minimum distance between codewords is d
 -- 3. the total number of codewords in the space is q^n
