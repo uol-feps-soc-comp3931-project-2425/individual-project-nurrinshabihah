@@ -40,11 +40,10 @@ def codeword (q n : ℕ) := Fin n → alphabet q
 
 -- ensure codewords are finite
 instance (q n : ℕ) : Fintype (codeword q n) := Pi.instFintype
-#check Pi.instFintype
+
 instance (q : ℕ) : DecidableEq (codeword q n) := by
   unfold codeword
   infer_instance
-
 
 /--
 Defines a Hamming ball of radius `r` centered at a codeword `x`.
@@ -68,8 +67,6 @@ def minDistance {q n : ℕ} (C : Finset (codeword q n)) : Option ℕ :=
   else
     none
 
- 
-
 
 /--
 The Hamming bound theorem states that for a code `C` of length `n`, size `q`, and minimum distance
@@ -78,9 +75,20 @@ of radius `t`, where `t` is the maximum number of errors that can be corrected.
 -/
 theorem hammingBound {q n d : ℕ} (C : Finset (codeword q n)) (hC : ∀ x ∈ C, ∀ y ∈ C,
 x ≠ y → hammingDist x y ≥ d) (hd : d ≥ 1  ):
-  C.card ≤ (q^n) / (volumeHamming q n ((d - 1) / 2)) :=
+∀ v ∈ C, ∀ w ∈ C, v ≠ w → Disjoint (hammingBall v t) (hammingBall w t) := by
+let t := (d-1)/2
+-- assume contradiction that spheres overlap
+intro v hv w hw hvw
+rw [Finset.disjoint_iff_ne]
+intro y hyv hyw
+-- y is in the hamming ball of radius t centered at v and w
+have hDist_v : hammingDist v y ≤ t := hyv
+have hDist_w : hammingDist w y ≤ t := hyw
+
+--C.card ≤ (q^n) / (volumeHamming q n ((d - 1) / 2)) :=
 by
     sorry
+#check Finset.disjoint_iff_ne
 -- 1. each codeword in C can be the center of a Hamming ball of radius r
 -- 2. the Hamming balls are disjoint because the minimum distance between codewords is d
 -- 3. the total number of codewords in the space is q^n
