@@ -13,16 +13,8 @@ codewords a code can have while ensuring error correction within a given distanc
 maximum number of disjoint Hamming balls that can fit in the space of a finite Π-type, where each
 ball corresponds to the set of elements differing from a codeword in at most a fixed number of
 positions.
-
-## Main definitions
-* `hammingBall β r`: the set of elements in `Π i, β i` within a Hamming distance `r` from a fixed
-center
-* `hammingBound q n r`: the maximum number of disjoint Hamming balls of radius `r` that can fit in
-in a space of length `n` over an alphabet of size `q`
-* `hammingBound β`: a type of synonym for representing bounds on codes in the space `Π i, β i`
-* `hammingBound.valid`: a property that verifies if a code satisfies the Hamming bound for its
-parameters.
 -/
+
 
 
 /-- alphabet of size `q`-/
@@ -63,35 +55,34 @@ alphabet of size `q`.
 The volume is the number of codewords within the Hamming ball.
 -/
 def volumeHamming (q n r : ℕ) : ℚ :=
-  ∑ i in Finset.range (r + 1), Nat.choose n i * (q - 1) ^ i
+  ∑ i ∈ Finset.range (r + 1), Nat.choose n i * (q - 1) ^ i
 
 /--
 The Hamming bound theorem states that for a code `C` of length `n`, size `q`, and minimum distance
 `d`, the size of `C` is bounded by the volume of the space divided by the volume of a Hamming ball
 of radius `t`, where `t` is the maximum number of errors that can be corrected.
 
+
+1. Proof disjoint of Hamming Balls
 The proof follows by contradiction: if two distinct codewords have overlapping Hamming balls, then their Hamming distance would be less than `d`, contradicting the definition of a code.
 -/
-theorem hammingBound {q n d : ℕ} (C : Finset (codeword q n)) 
+lemma hammingDisjoint {q n d : ℕ} (C : Finset (codeword q n)) 
 -- minimum distance between distinct codewords is at least d
 (hC : ∀ x ∈ C, ∀ y ∈ C, x ≠ y → hammingDist x y ≥ d) 
 -- distance parameter is at least 1 (two distinct codewords differ in one position )
-(hd : d ≥ 1  )
 -- to ensure Hamming balls cannot overlap
 (ht : 2 * t < d):
--- Goal : Show that for any two distinct codewords v, w /in C, their Hamming balls do not overlap.
+-- Goal : Show that for any two distinct codewords v, w ∈ C, their Hamming balls do not overlap.
 ∀ v ∈ C, ∀ w ∈ C, v ≠ w → Disjoint (hammingBall v t) (hammingBall w t) := by
 
 -- Assume for contradiction that there exist distinct `v, w ∈ C` whose Hamming balls overlap
 intro v hv w hw hdiff
-#check Finset.disjoint_iff_ne
+
 rw [Finset.disjoint_iff_ne]
 
 -- Let z exists in both balls
 rintro z hzv c hzw rfl
 
-
-#check Finset.mem_filter
 -- how elements belong to a filtered Finset
  -- z ∈ Finset.univ ∧ hammingDist v z ≤ t
  -- extract the second condition
@@ -106,7 +97,7 @@ have hammingDist_w_symm : hammingDist z w ≤ t := by
 -- using the triangle inequality: d(v, w) ≤ d(v, z) + d(z, w)
 have hamming_triangle : hammingDist v w ≤ hammingDist v z + hammingDist z w := 
   hammingDist_triangle v z w
-
+   
 -- upper bound the sum using `t`
 have hamming_bound : hammingDist v z + hammingDist z w ≤ t + t := 
   -- hammingDist v z + hammingDist z w ≤ t + t
@@ -121,17 +112,33 @@ have h_contra : hammingDist v w < d :=
   lt_of_le_of_lt (le_trans hamming_triangle hamming_bound) (by rw [h_eq]; exact h_final)
 have h_min_dist : hammingDist v w ≥ d := hC v hv w hw hdiff
 
--- arrive to conttradiction
+-- arrive to contradiction
 have h_false : False := by
     linarith [h_contra, h_min_dist]  
 
 contradiction
--- 1. each codeword in C can be the center of a Hamming ball of radius r
--- 2. the Hamming balls are disjoint because the minimum distance between codewords is d
--- 3. the total number of codewords in the space is q^n
--- 4. the volume of a Hamming ball of radius r is the sum of the volumes of the Hamming balls
--- centered at each codeword
--- 5. prove that the total number of codewords multiplied by the volume of a Hamming ball cannot
--- exceed q^n
 
-#print hammingBound
+lemma hammingCard {q n r : ℕ} (y : codeword q n) :
+(hammingBall y r).card = ∑ i ∈ Finset.range (t + 1), Nat.choose n i * (q - 1) ^ i := by
+  sorry
+
+
+theorem hammingBound {q n d : ℕ} (C : Finset (codeword q n)) 
+(hC : ∀ x ∈ C, ∀ y ∈ C, x ≠ y → hammingDist x y ≥ d) 
+(hd : d ≥ 1)
+(ht : 2 * t < d):
+C.card ≤ (q ^ n)/(∑ i ∈ Finset.range (t + 1), Nat.choose n i * (q - 1) ^ i) := by
+
+-- 1. Disjointness
+have disjoint_balls := hammingDisjoint C hC ht
+
+-- 2. Count the number of words in all Hamming balls
+-- Use cardinality of Hamming sphere to calculate the words in each ball
+have hammingCard {q n r : ℕ} (y : codeword q n) :
+(hammingBall y r).card = ∑ i ∈ Finset.range (t + 1), Nat.choose n i * (q - 1) ^ i := by
+  sorry
+
+
+
+-- 3. F^n represents the space of all possible codewords of length n, on alphabet of size q. All words in  belong to F^n (union of spheres is a subset of F^n) and is a disjoint, so it cannot exceed |F^n| = q^n
+
