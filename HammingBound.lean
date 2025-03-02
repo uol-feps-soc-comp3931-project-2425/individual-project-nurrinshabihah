@@ -1,4 +1,4 @@
-/-
+ /-
 Author: Nurrin Shabihah
 -/
 import Mathlib.InformationTheory.Hamming
@@ -64,7 +64,8 @@ of radius `t`, where `t` is the maximum number of errors that can be corrected.
 
 
 1. Proof disjoint of Hamming Balls
-The proof follows by contradiction: if two distinct codewords have overlapping Hamming balls, then their Hamming distance would be less than `d`, contradicting the definition of a code.
+The proof follows by contradiction: if two distinct codewords have overlapping Hamming balls, then their 
+Hamming distance would be less than `d`, contradicting the definition of a code.
 -/
 lemma hammingDisjoint {q n d : ℕ} (C : Finset (codeword q n)) 
 -- minimum distance between distinct codewords is at least d
@@ -118,9 +119,39 @@ have h_false : False := by
 
 contradiction
 
-lemma hammingCard {q n r : ℕ} (y : codeword q n) :
-(hammingBall y r).card = ∑ i ∈ Finset.range (t + 1), Nat.choose n i * (q - 1) ^ i := by
-  sorry
+-- count the number of codewords at each Hamming distance i from y and then sum over all i from 0 to r
+lemma hammingCard {q n r : ℕ} (y : codeword q n):
+(hammingBall y r).card = volumeHamming q n r := by
+unfold hammingBall volumeHamming
+-- Hamming ball of radius r s the disjoint union of Hamming spheres of radius i for i ∈ {0,1,...,r}, 
+-- each Hamming sphere of radius i contains (n choose i)*(q-1)^i codewords
+
+-- 1. Define a Hamming sphere of radius i
+let hammingSphere (y : codeword q n) (i : ℕ): Finset (codeword q n) := 
+Finset.filter (fun z => hammingDist y z = i) Finset.univ
+
+-- 2. Show that the Hamming ball is the disjoint union of Hamming spheres
+have h_disjoint : ∀ i j , i ∈ Finset.range (r + 1) → j ∈ Finset.range (r + 1) → i ≠ j → 
+Disjoint (hammingSphere y i) (hammingSphere y j):= by 
+  rintro i j hi hj hdiff
+  rw [Finset.disjoint_iff_ne]
+  rintro z hzi c hzj rfl
+  have h_dist_i := (Finset.mem_filter.mp hzi).2
+  have h_dist_j := (Finset.mem_filter.mp hzj).2
+  have h_eq : i = j := by rw [←h_dist_i, ←h_dist_j]
+  contradiction
+
+
+-- 3. Compute cardinality as the sum of cardinalities of Hamming spheres
+
+
+-- 4. Compute cardinality of each Hamming spheres
+
+
+
+
+
+  
 
 
 theorem hammingBound {q n d : ℕ} (C : Finset (codeword q n)) 
@@ -128,17 +159,20 @@ theorem hammingBound {q n d : ℕ} (C : Finset (codeword q n))
 (hd : d ≥ 1)
 (ht : 2 * t < d):
 C.card ≤ (q ^ n)/(∑ i ∈ Finset.range (t + 1), Nat.choose n i * (q - 1) ^ i) := by
-
+sorry
 -- 1. Disjointness
-have disjoint_balls := hammingDisjoint C hC ht
+--have disjoint_balls := hammingDisjoint C hC ht
 
 -- 2. Count the number of words in all Hamming balls
 -- Use cardinality of Hamming sphere to calculate the words in each ball
-have hammingCard {q n r : ℕ} (y : codeword q n) :
-(hammingBall y r).card = ∑ i ∈ Finset.range (t + 1), Nat.choose n i * (q - 1) ^ i := by
-  sorry
+--have hammingCard {q n r : ℕ} (y : codeword q n) :
+--(hammingBall y r).card = ∑ i ∈ Finset.range (t + 1), Nat.choose n i * (q - 1) ^ i := by
+ 
 
 
 
--- 3. F^n represents the space of all possible codewords of length n, on alphabet of size q. All words in  belong to F^n (union of spheres is a subset of F^n) and is a disjoint, so it cannot exceed |F^n| = q^n
+-- 3. F^n represents the space of all possible codewords of length n, on alphabet of size q. All words in  
+-- belong to F^n (union of spheres is a subset of F^n) and is a disjoint, so it cannot exceed |F^n| = q^n
+
+
 
