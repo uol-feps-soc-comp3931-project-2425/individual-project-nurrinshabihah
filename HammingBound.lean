@@ -1,8 +1,10 @@
  /-
 Author: Nurrin Shabihah
 -/
+import Mathlib.Combinatorics.Enumerative.DoubleCounting
 import Mathlib.InformationTheory.Hamming
 import Mathlib.Data.Fintype.Basic
+
 
 
 /-
@@ -64,8 +66,8 @@ of radius `t`, where `t` is the maximum number of errors that can be corrected.
 
 
 1. Proof disjoint of Hamming Balls
-The proof follows by contradiction: if two distinct codewords have overlapping Hamming balls, then their 
-Hamming distance would be less than `d`, contradicting the definition of a code.
+The proof follows by contradiction: if two distinct codewords have overlapping Hamming balls, then 
+their Hamming distance would be less than `d`, contradicting the definition of a code.
 -/
 lemma hammingDisjoint {q n d : ℕ} (C : Finset (codeword q n)) 
 -- minimum distance between distinct codewords is at least d
@@ -141,18 +143,26 @@ Disjoint (hammingSphere y i) (hammingSphere y j):= by
   have h_eq : i = j := by rw [←h_dist_i, ←h_dist_j]
   contradiction
 
+-- 3. Disjoint union property
+have h_union : ∀ i j , i ∈ Finset.range (r + 1) → j ∈ Finset.range (r + 1) → i ≠ j → 
+  ((hammingSphere y i) ∪ (hammingSphere y j)).card = (hammingSphere y i).card + (hammingSphere y j).card := by
+  intros i j hi hj hdiff 
+  have h_disjoint_ij : Disjoint (hammingSphere y i) (hammingSphere y j) := 
+    h_disjoint i j hi hj hdiff  
+  exact Finset.card_union_of_disjoint h_disjoint_ij
 
--- 3. Compute cardinality as the sum of cardinalities of Hamming spheres
-
-
--- 4. Compute cardinality of each Hamming spheres
-
-
-
-
-
+-- 4. Inductive argument to count sphere sizes
+have sphereCard : ∀ i, i ∈ Finset.range (r + 1) → 
+  (hammingSphere y i).card = Nat.choose n i * (q - 1) ^ i := by
+  intro i hi
+  -- base case: i=0
+  induction i 
+  simp [hammingSphere, hammingDist]
+  sorry
+  -- inductive step: i=i+1
   
 
+#check Finset.sum_card_bipartiteAbove_eq_sum_card_bipartiteBelow
 
 theorem hammingBound {q n d : ℕ} (C : Finset (codeword q n)) 
 (hC : ∀ x ∈ C, ∀ y ∈ C, x ≠ y → hammingDist x y ≥ d) 
@@ -171,8 +181,10 @@ sorry
 
 
 
--- 3. F^n represents the space of all possible codewords of length n, on alphabet of size q. All words in  
--- belong to F^n (union of spheres is a subset of F^n) and is a disjoint, so it cannot exceed |F^n| = q^n
+-- 3. F^n represents the space of all possible codewords of length n, on alphabet of size q. 
+-- All words in  belong to F^n (union of spheres is a subset of F^n) and is a disjoint, so it 
+-- cannot exceed |F^n| = q^n
+
 
 
 
