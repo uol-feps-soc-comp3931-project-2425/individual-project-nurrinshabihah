@@ -4,8 +4,7 @@ Author: Nurrin Shabihah
 import Mathlib.Combinatorics.Enumerative.DoubleCounting
 import Mathlib.InformationTheory.Hamming
 import Mathlib.Data.Fintype.Basic
-
-
+import Mathlib.Data.Finset.Basic
 
 /-
 # Hamming bound
@@ -18,14 +17,12 @@ positions.
 -/
 
 
-
+set_option diagnostics true
 /-- alphabet of size `q`-/
 -- alphabet q is a set of symbols
 def alphabet (q : ℕ) := Fin q
-
 -- ensure alphabet is finite
 instance (q : ℕ) : Fintype (alphabet q) := Fin.fintype q
-
 -- to check equality between symbols
 instance (q : ℕ) : DecidableEq (alphabet q) := by
   unfold alphabet
@@ -41,7 +38,6 @@ instance (q n : ℕ) : Fintype (codeword q n) := Pi.instFintype
 instance (q : ℕ) : DecidableEq (codeword q n) := by
   unfold codeword
   infer_instance
-
 /--
 Defines a Hamming ball of radius `r` centered at a codeword `x`.
 It is the set of all codewords `y` such that the Hamming distance between `x`
@@ -129,7 +125,7 @@ unfold hammingBall volumeHamming
 -- each Hamming sphere of radius i contains (n choose i)*(q-1)^i codewords
 
 -- 1. Define a Hamming sphere of radius i
-let hammingSphere (y : codeword q n) (i : ℕ): Finset (codeword q n) := 
+let hammingSphere (y : codeword q n) (i : ℕ):= 
 Finset.filter (fun z => hammingDist y z = i) Finset.univ
 
 -- 2. Show that the Hamming ball is the disjoint union of Hamming spheres
@@ -140,29 +136,45 @@ Disjoint (hammingSphere y i) (hammingSphere y j):= by
   rintro z hzi c hzj rfl
   have h_dist_i := (Finset.mem_filter.mp hzi).2
   have h_dist_j := (Finset.mem_filter.mp hzj).2
-  have h_eq : i = j := by rw [←h_dist_i, ←h_dist_j]
-  contradiction
+  exact hdiff (h_dist_i.symm.trans h_dist_j)
 
 -- 3. Disjoint union property
-have h_union : ∀ i j , i ∈ Finset.range (r + 1) → j ∈ Finset.range (r + 1) → i ≠ j → 
-  ((hammingSphere y i) ∪ (hammingSphere y j)).card = (hammingSphere y i).card + (hammingSphere y j).card := by
-  intros i j hi hj hdiff 
-  have h_disjoint_ij : Disjoint (hammingSphere y i) (hammingSphere y j) := 
-    h_disjoint i j hi hj hdiff  
-  exact Finset.card_union_of_disjoint h_disjoint_ij
+have h_union : Finset.filter (fun z => hammingDist y z ≤ r) Finset.univ = Finset.biUnion (Finset.range (r + 1)) (hammingSphere y) := by
+  apply Finset.ext
+  intro z
+  simp only [Finset.mem_filter, Finset.mem_univ, true_and, Finset.mem_biUnion]
+  constructor
+  intro hz
+  use hammingDist y z
+  simp [hammingSphere, hz, Finset.mem_range.mpr (Nat.lt_succ_of_le hz)]
+  rintro ⟨i, hi, hz⟩
+  rw [(Finset.mem_filter.mp hz).2]
+  exact Nat.le_of_lt_succ (Finset.mem_range.mp hi)
 
 -- 4. Inductive argument to count sphere sizes
 have sphereCard : ∀ i, i ∈ Finset.range (r + 1) → 
   (hammingSphere y i).card = Nat.choose n i * (q - 1) ^ i := by
   intro i hi
   -- base case: i=0
-  induction i 
-  simp [hammingSphere, hammingDist]
-  sorry
-  -- inductive step: i=i+1
-  
-
+  -- the only word at distance 0 is y itself so cardinality is 1
+  induction i with 
+  | zero =>
+  simp [hammingSphere] 
+  --rw [Nat.choose_zero_right, pow_zero, mul_one]
+  #check Finset.card_eq_one
+  rw [Finset.card_eq_one]
+  use y
+  apply Finset.ext
+  intro z
+  simp
+  rw [eq_comm]
+  | succ i ih  => 
+-- inductive step: i=i+1
+-- construct bipartite graph
+-- define bipartite relations
+-- apply double counting
 #check Finset.sum_card_bipartiteAbove_eq_sum_card_bipartiteBelow
+
 
 theorem hammingBound {q n d : ℕ} (C : Finset (codeword q n)) 
 (hC : ∀ x ∈ C, ∀ y ∈ C, x ≠ y → hammingDist x y ≥ d) 
@@ -178,9 +190,6 @@ sorry
 --have hammingCard {q n r : ℕ} (y : codeword q n) :
 --(hammingBall y r).card = ∑ i ∈ Finset.range (t + 1), Nat.choose n i * (q - 1) ^ i := by
  
-
-
-
 -- 3. F^n represents the space of all possible codewords of length n, on alphabet of size q. 
 -- All words in  belong to F^n (union of spheres is a subset of F^n) and is a disjoint, so it 
 -- cannot exceed |F^n| = q^n
