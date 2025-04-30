@@ -3,7 +3,10 @@ Author: Nurrin Shabihah
 
 # Hamming bound
 
-The Hamming bound provides a limit on the number of codewords a code can have while ensuring error correction within a given distance. It calculates the maximum number of disjoint Hamming balls that can fit in the space of a finite Π-type, where each ball corresponds to the set of elements differing from a codeword in at most a fixed number of positions.
+The Hamming bound provides a limit on the number of codewords a code can have while ensuring error correction 
+within a given distance. It calculates the maximum number of disjoint Hamming balls that can fit in the space 
+of a finite Π-type, where each ball corresponds to the set of elements differing from a codeword in at most a 
+fixed number of positions.
 -/
 
 import Mathlib.Combinatorics.Enumerative.DoubleCounting
@@ -96,7 +99,8 @@ contradiction
 
 /--
 2. Count the cardinality of Hamming Ball
-The cardinality of a Hamming ball of radius `r` centered at a codeword `y` is equal to the volume of the Hamming ball. This follows by viewing the ball as a disjoint union of spheres.
+The cardinality of a Hamming ball of radius `r` centered at a codeword `y` is equal to the volume of the 
+Hamming ball. This follows by viewing the ball as a disjoint union of spheres.
 -/
 -- count the number of codewords at each Hamming distance i from y and then sum over all i from 0 to r
 lemma hammingCard {q n r : ℕ} (y : codeword q n):
