@@ -1,4 +1,4 @@
-# Formal Verificationof the Disjointness of Hamming Balls in Lean
+# Formal Verification of the Disjointness of Hamming Balls in Lean
 
 This project formalises a key lemma in coding theory : **Disjointness of Hamming Balls**
 
